@@ -31,15 +31,14 @@ class HGATModel(nn.Module):
 
         self.args = args
 
-    def encode(self, adj):
-        o = torch.zeros((adj.shape[0], 1)).to(default_device())
-        x = adj.to_dense()
+    def encode(self, adj_train, adj_train_norm):
+        o = torch.zeros((adj_train.shape[0], 1)).to(default_device())
+        x = adj_train.to_dense().to(default_device())
         x = torch.cat((o, x), dim=1)
         if torch.cuda.is_available():
-            adj = adj.to(default_device())
+            adj_train_norm = adj_train_norm.to(default_device())
             x = x.to(default_device())
-        h = self.encoder.encode(x, adj)
-        del x
+        h = self.encoder.encode(x, adj_train_norm)
         return h
 
     def decode(self, h, idx):
