@@ -42,6 +42,7 @@ def train(model):
 
     # add
     data.adj_train = sparse_mx_to_torch_sparse_tensor(data.adj_train + sp.eye(data.adj_train.shape[0]))
+    # data.adj_train = sparse_mx_to_torch_sparse_tensor(data.adj_train)
     # end add
 
     for epoch in range(1, args.epochs + 1):
@@ -58,7 +59,7 @@ def train(model):
             train_loss.backward()
             optimizer.step()
             avg_loss += train_loss / num_batches
-            print("Batch: {}".format(batch))
+            # print("Batch: {}".format(batch))
         
 
         tb_writer.add_scalar("Loss/Train", avg_loss, epoch)
