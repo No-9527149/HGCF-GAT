@@ -11,12 +11,13 @@ from models.base_models import HGATModel
 from rgd.rsgd import RiemannianSGD
 from utils import get_tensorboard, early_stop
 from utils.data_generator import Data
-from utils.helper import default_device, set_seed
+from utils.helper import default_device, set_seed, sparse_mx_to_torch_sparse_tensor
 from utils.log import Logger, set_color
 from utils.sampler import WarpSampler
 import itertools
 import heapq
 import torch
+import scipy.sparse as sp
 
 
 def train(model):
@@ -39,6 +40,10 @@ def train(model):
     best_score = [[np.NINF, np.NINF, np.NINF, np.NINF],
                 [np.NINF, np.NINF, np.NINF, np.NINF]]
 
+    # add
+    data.adj_train = sparse_mx_to_torch_sparse_tensor(data.adj_train + sp.eye(data.adj_train.shape[0]))
+    # end add
+
     for epoch in range(1, args.epochs + 1):
         avg_loss = 0.
         t = time.time()
@@ -46,8 +51,7 @@ def train(model):
             triples = sampler.next_batch()
             model.train()
             optimizer.zero_grad()
-            # embeddings = model.encode(data.features, data.adj_train_norm)
-            embeddings = model.encode(data.adj_train_norm)
+            embeddings = model.encode(data.adj_train, data.adj_train_norm)
             train_loss = model.compute_loss(embeddings, triples)
             del embeddings
             del triples
@@ -74,8 +78,7 @@ def train(model):
         if (epoch + 1) % args.eval_freq == 0:
             model.eval()
             start = time.time()
-            # embeddings = model.encode(data.features, data.adj_train_norm)
-            embeddings = model.encode(data.adj_train_norm)
+            embeddings = model.encode(data.adj_train, data.adj_train_norm)
             pred_matrix_gpu = model.predict(embeddings, data)
             print("Encode:\t{}s\t".format(time.time() - start) +
                 "Pred:\t{}s".format(time.time() - start))
@@ -186,6 +189,9 @@ if __name__ == '__main__':
     set_seed(args.seed)
 
     data = Data(args.dataset, args.norm_adj, args.seed, args.test_ratio)
+    # add
+    # data.adj_train.to(default_device())
+    # end add
     total_edges = data.adj_train.count_nonzero()
     args.n_nodes = data.num_users + data.num_items
     args.feat_dim = data.adj_train_norm.shape[1]

@@ -47,12 +47,6 @@ class Data(object):
         self.adj_train = self.generate_adj()
 
         if eval(norm_adj):
-            # # add
-            # if sp.isspmatrix(self.features):
-            #     self.features = np.array(self.features.todense())
-            # self.features = normalize(self.features)
-            # self.features = torch.Tensor(self.features).to(default_device())
-            # # end add
             self.adj_train_norm = normalize(
                 self.adj_train + sp.eye(self.adj_train.shape[0]))
             self.adj_train_norm = sparse_mx_to_torch_sparse_tensor(
