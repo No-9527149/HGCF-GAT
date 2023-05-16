@@ -4,7 +4,6 @@ import traceback
 from datetime import datetime
 
 import numpy as np
-import os
 
 from config import parser
 from eval_metrics import recall_at_k_gpu
