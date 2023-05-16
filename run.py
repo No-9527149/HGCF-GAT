@@ -46,7 +46,8 @@ def train(model):
             triples = sampler.next_batch()
             model.train()
             optimizer.zero_grad()
-            embeddings = model.encode(data.features, data.adj_train_norm)
+            # embeddings = model.encode(data.features, data.adj_train_norm)
+            embeddings = model.encode(data.adj_train_norm)
             train_loss = model.compute_loss(embeddings, triples)
             del embeddings
             del triples
@@ -73,7 +74,8 @@ def train(model):
         if (epoch + 1) % args.eval_freq == 0:
             model.eval()
             start = time.time()
-            embeddings = model.encode(data.features, data.adj_train_norm)
+            # embeddings = model.encode(data.features, data.adj_train_norm)
+            embeddings = model.encode(data.adj_train_norm)
             pred_matrix_gpu = model.predict(embeddings, data)
             print("Encode:\t{}s\t".format(time.time() - start) +
                 "Pred:\t{}s".format(time.time() - start))
@@ -186,7 +188,7 @@ if __name__ == '__main__':
     data = Data(args.dataset, args.norm_adj, args.seed, args.test_ratio)
     total_edges = data.adj_train.count_nonzero()
     args.n_nodes = data.num_users + data.num_items
-    args.feat_dim = data.features.shape[1]
+    args.feat_dim = data.adj_train_norm.shape[1]
 
     sampler = WarpSampler((data.num_users, data.num_items),
                         data.adj_train, args.batch_size, args.num_neg)

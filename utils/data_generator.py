@@ -2,7 +2,6 @@ import os
 import pickle as pkl
 import time
 
-import torch
 import numpy as np
 import scipy.sparse as sp
 from scipy.sparse import csr_matrix
@@ -44,15 +43,16 @@ class Data(object):
             self.num_users, self.num_items = len(self.user_item_list), max(
                 [max(x) for x in self.user_item_list]) + 1
 
-        self.adj_train, self.features = self.generate_adj()
+        # self.adj_train, self.features = self.generate_adj()
+        self.adj_train = self.generate_adj()
 
         if eval(norm_adj):
-            # add
-            if sp.isspmatrix(self.features):
-                self.features = np.array(self.features.todense())
-            self.features = normalize(self.features)
-            self.features = torch.Tensor(self.features).to(default_device())
-            # end add
+            # # add
+            # if sp.isspmatrix(self.features):
+            #     self.features = np.array(self.features.todense())
+            # self.features = normalize(self.features)
+            # self.features = torch.Tensor(self.features).to(default_device())
+            # # end add
             self.adj_train_norm = normalize(
                 self.adj_train + sp.eye(self.adj_train.shape[0]))
             self.adj_train_norm = sparse_mx_to_torch_sparse_tensor(
@@ -99,12 +99,13 @@ class Data(object):
         data = np.ones((coo_user_item.nnz * 2,))
         adj_csr = sp.coo_matrix(
             (data, (rows, cols))).tocsr().astype(np.float32)
-        # add
-        features = sp.eye(adj_csr.shape[0])
-        # edd add
+        # # add
+        # features = sp.eye(adj_csr.shape[0])
+        # # edd add
         print(set_color("Time Elapsed: ", 'yellow') + set_color(str(time.time() - start), 'blue'))
-
-        return adj_csr, features
+        
+        return adj_csr
+        # return adj_csr, features
 
     def load_pickle(self, name):
         with open(name, 'rb') as f:

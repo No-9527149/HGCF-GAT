@@ -5,6 +5,7 @@ import torch.nn as nn
 import manifolds
 import models.encoders as encoders
 from utils.helper import default_device
+import scipy.sparse as sp
 
 
 # add
@@ -30,8 +31,9 @@ class HGATModel(nn.Module):
 
         self.args = args
 
-    def encode(self, x, adj):
-        o = torch.zeros((x.shape[0], 1)).to(default_device())
+    def encode(self, adj):
+        o = torch.zeros((adj.shape[0], 1)).to(default_device())
+        x = adj.to_dense()
         x = torch.cat((o, x), dim=1)
         if torch.cuda.is_available():
             adj = adj.to(default_device())
