@@ -7,7 +7,8 @@ import numpy as np
 
 from config import parser
 from eval_metrics import recall_at_k_gpu
-from models.base_models import HGATModel
+from models.base_models import HGCFModel
+# from models.base_models import HGATModel
 from rgd.rsgd import RiemannianSGD
 from utils import get_tensorboard, early_stop
 from utils.data_generator import Data
@@ -41,7 +42,8 @@ def train(model):
                 [np.NINF, np.NINF, np.NINF, np.NINF]]
 
     # add
-    data.adj_train = sparse_mx_to_torch_sparse_tensor(data.adj_train + sp.eye(data.adj_train.shape[0]))
+    # 考虑是否需要修改
+    # data.adj_train = sparse_mx_to_torch_sparse_tensor(data.adj_train + sp.eye(data.adj_train.shape[0]))
     # data.adj_train = sparse_mx_to_torch_sparse_tensor(data.adj_train)
     # end add
 
@@ -52,7 +54,8 @@ def train(model):
             triples = sampler.next_batch()
             model.train()
             optimizer.zero_grad()
-            embeddings = model.encode(data.adj_train, data.adj_train_norm)
+            embeddings = model.encode(data.adj_train_norm)
+            # embeddings = model.encode(data.adj_train, data.adj_train_norm)
             train_loss = model.compute_loss(embeddings, triples)
             del embeddings
             del triples
@@ -79,7 +82,8 @@ def train(model):
         if (epoch + 1) % args.eval_freq == 0:
             model.eval()
             start = time.time()
-            embeddings = model.encode(data.adj_train, data.adj_train_norm)
+            embeddings = model.encode(data.adj_train_norm)
+            # embeddings = model.encode(data.adj_train, data.adj_train_norm)
             pred_matrix_gpu = model.predict(embeddings, data)
             print("Encode:\t{}s\t".format(time.time() - start) +
                 "Pred:\t{}s".format(time.time() - start))
@@ -177,37 +181,35 @@ def eval_rec(pred_matrix_gpu, data):
 
 
 if __name__ == '__main__':
+# ----------------------------------------------------------------
+# config init
     args = parser.parse_args()
-
     if args.log:
         now = datetime.now()
         now = now.strftime('%m-%d_%H-%M-%S')
         log = Logger(args.log, now)
-
         for arg in vars(args):
             log.write(arg + '=' + str(getattr(args, arg)) + '\n')
-
     set_seed(args.seed)
-
+# ----------------------------------------------------------------
+# generate data
     data = Data(args.dataset, args.norm_adj, args.seed, args.test_ratio)
-    # add
-    # data.adj_train.to(default_device())
-    # end add
     total_edges = data.adj_train.count_nonzero()
     args.n_nodes = data.num_users + data.num_items
     args.feat_dim = data.adj_train_norm.shape[1]
-
-    sampler = WarpSampler((data.num_users, data.num_items),
-                        data.adj_train, args.batch_size, args.num_neg)
-
-    # model = HGCFModel((data.num_users, data.num_items), args)
-    model = HGATModel((data.num_users, data.num_items), args)
+# ----------------------------------------------------------------
+# sampler init
+    sampler = WarpSampler((data.num_users, data.num_items),data.adj_train, args.batch_size, args.num_neg)
+# ----------------------------------------------------------------
+# model init
+    model = HGCFModel((data.num_users, data.num_items), args)
+    # model = HGATModel((data.num_users, data.num_items), args)
     model = model.to(default_device())
     print(str(model))
-
     print(set_color('\nModel is running on: ', 'green') +
         set_color(str(next(model.parameters()).device), 'red'))
-
+# ----------------------------------------------------------------
+# train
     try:
         train(model)
     except Exception:
