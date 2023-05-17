@@ -44,7 +44,7 @@ class StackGCNs(Module):
         output = [x_tangent]
         # a = 1 * 41342
         for i in range(self.num_gcn_layers):
-            temp = torch.spmm(adj, output[i]).to(default_device)
+            temp = torch.spmm(adj, output[i]).to(default_device())
             temp = self.a.mm(temp)
             temp = temp.squeeze()
             temp = torch.sigmoid(temp)
