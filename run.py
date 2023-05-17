@@ -57,7 +57,6 @@ def train(model):
             embeddings = model.encode(data.adj_train_norm)
             # embeddings = model.encode(data.adj_train, data.adj_train_norm)
             train_loss = model.compute_loss(embeddings, triples)
-            del embeddings
             del triples
             train_loss.backward()
             optimizer.step()
@@ -88,8 +87,6 @@ def train(model):
             print("Encode:\t{}s\t".format(time.time() - start) +
                 "Pred:\t{}s".format(time.time() - start))
             results = eval_rec(pred_matrix_gpu, data)
-            
-            del embeddings
 
             if args.log:
                 log.write('Test:{:3d}\t{:.3f}\t{:.4f}\t{:.3f}\t{:.4f}\n'.format(epoch + 1, results[0][1], results[0][2],
