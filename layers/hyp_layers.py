@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn.modules.module import Module
 import torch.nn.functional as F
+from utils.helper import default_device
 
 
 class HyperbolicGraphConvolution(nn.Module):
@@ -27,7 +28,7 @@ class StackGCNs(Module):
 
         self.num_gcn_layers = num_layers - 1
         
-        self.a = nn.Parameter(torch.zeros(adj_dim, adj_dim))
+        self.a = nn.Parameter(torch.zeros(adj_dim, adj_dim)).to(default_device())
         nn.init.xavier_normal_(self.a.data, gain = 0.5)
 
     def plainGCN(self, inputs):
@@ -43,7 +44,7 @@ class StackGCNs(Module):
         output = [x_tangent]
         # a = 1 * 41342
         for i in range(self.num_gcn_layers):
-            temp = torch.spmm(adj, output[i])
+            temp = torch.spmm(adj, output[i]).to(default_device)
             temp = self.a.mm(temp)
             temp = temp.squeeze()
             temp = torch.sigmoid(temp)
