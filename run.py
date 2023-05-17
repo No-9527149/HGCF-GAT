@@ -55,9 +55,7 @@ def train(model):
             model.train()
             optimizer.zero_grad()
             embeddings = model.encode(data.adj_train_norm)
-            # embeddings = model.encode(data.adj_train, data.adj_train_norm)
             train_loss = model.compute_loss(embeddings, triples)
-            del triples
             train_loss.backward()
             optimizer.step()
             avg_loss += train_loss / num_batches
@@ -82,7 +80,6 @@ def train(model):
             model.eval()
             start = time.time()
             embeddings = model.encode(data.adj_train_norm)
-            # embeddings = model.encode(data.adj_train, data.adj_train_norm)
             pred_matrix_gpu = model.predict(embeddings, data)
             print("Encode:\t{}s\t".format(time.time() - start) +
                 "Pred:\t{}s".format(time.time() - start))

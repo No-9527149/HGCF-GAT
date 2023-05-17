@@ -27,7 +27,7 @@ class StackGCNs(Module):
         super(StackGCNs, self).__init__()
 
         self.num_gcn_layers = num_layers - 1
-        
+
         self.a = nn.Parameter(torch.zeros(adj_dim, adj_dim)).to(default_device())
         nn.init.xavier_normal_(self.a.data, gain = 0.5)
 
