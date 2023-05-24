@@ -60,7 +60,6 @@ def train(model):
             optimizer.step()
             avg_loss += train_loss / num_batches
             # print("Batch: {}".format(batch))
-        
 
         tb_writer.add_scalar("Loss/Train", avg_loss, epoch)
 
@@ -118,25 +117,7 @@ def argmax_top_k(a, top_k=50):
     return topk_score_items
 
 
-def ndcg_func_cpu(ground_truths, ranks):
-    result = 0
-    for i, (rank, ground_truth) in enumerate(zip(ranks, ground_truths)):
-        # rank = rank.cpu().numpy()
-        len_rank = len(rank)
-        len_gt = len(ground_truth)
-        idcg_len = min(len_gt, len_rank)
-
-        # calculate idcg
-        idcg = np.cumsum(1.0 / np.log2(np.arange(2, len_rank + 2)))
-        idcg[idcg_len:] = idcg[idcg_len-1]
-
-        dcg = np.cumsum(
-            [1.0/np.log2(idx+2) if item in ground_truth else 0.0 for idx, item in enumerate(rank)])
-        result += dcg / idcg
-    return result / len(ranks)
-
-
-def ndcg_func_gpu(ground_truths, ranks):
+def ndcg_func(ground_truths, ranks):
     result = 0
     for i, (rank, ground_truth) in enumerate(zip(ranks, ground_truths)):
         rank = rank.cpu().numpy()
@@ -169,7 +150,7 @@ def eval_rec(pred_matrix_gpu, data):
     for k in [5, 10, 20, 50]:
         recall_gpu.append(recall_at_k_gpu(data.test_dict, pred_list_gpu, k))
 
-    all_ndcg_gpu = ndcg_func_gpu([*data.test_dict.values()], pred_list_gpu)
+    all_ndcg_gpu = ndcg_func([*data.test_dict.values()], pred_list_gpu)
     ndcg_gpu = [all_ndcg_gpu[x-1] for x in [5, 10, 20, 50]]
     return recall_gpu, ndcg_gpu
 

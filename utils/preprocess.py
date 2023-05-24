@@ -40,7 +40,7 @@ def remove_infrequent_items(data, min_counts=5):
     df = deepcopy(data)
     counts = df['item_id'].value_counts()
     df = df[df["item_id"].isin(counts[counts >= min_counts].index)]
-    print("items with < {} interactoins are removed".format(min_counts))
+    print("items with < {} interactions are removed".format(min_counts))
     return df
 
 
@@ -48,7 +48,7 @@ def remove_infrequent_users(data, min_counts=10):
     df = deepcopy(data)
     counts = df['user_id'].value_counts()
     df = df[df["user_id"].isin(counts[counts >= min_counts].index)]
-    print("users with < {} interactoins are removed".format(min_counts))
+    print("users with < {} interactions are removed".format(min_counts))
     return df
 
 
@@ -97,8 +97,8 @@ if __name__ == "__main__":
     parser.add_argument("--read_path", type=str)
     args = parser.parse_args()
 
-    # args.dataset = 'Amazon-Book'
-    # args.read_path = "Amazon-Books/"
+    args.dataset = 'Amazon-CD'
+    args.read_path = "data/Amazon-CD/"
 
     dir_path = args.read_path
     if args.dataset == 'Amazon-CD':
@@ -114,8 +114,8 @@ if __name__ == "__main__":
         raise NotImplementedError("dataset %s is not included." % args.dataset)
 
     
-    # rating_file = 'ratings_Books.csv'
-    # params = [10, 5]
+    rating_file = 'ratings_CDs_and_Vinyl.csv'
+    params = [10, 5]
 
     data_records = read_user_rating_records()
     data_records.loc[data_records.rating < 4, 'rating'] = 0
@@ -131,6 +131,10 @@ if __name__ == "__main__":
     data = filtered_data.groupby('user_id')['item_id'].apply(list)
     unique_data = filtered_data.groupby('user_id')['item_id'].nunique()
     data = data[unique_data[unique_data >= params[1]].index]
+    
+    random_index = np.random.permutation(data.index)
+    data = data[random_index]
+    data = data.head(15000)
 
     user_item_dict = data.to_dict()
     user_mapping = []
@@ -148,8 +152,8 @@ if __name__ == "__main__":
     rating_matrix = generate_rating_matrix(inner_data_records, len(user_mapping), len(item_mapping))
     rating_matrix = rating_matrix.transpose()
     print(rating_matrix.nnz)
-    
+
     if not os.path.exists('data/' + args.dataset):
         os.makedirs('data/' + args.dataset)
-    
-    save_obj('data/' + args.dataset + '/user_item_list', inner_data_records)
+
+    save_obj('data/' + args.dataset + '/test' + '/user_item_list', inner_data_records)
