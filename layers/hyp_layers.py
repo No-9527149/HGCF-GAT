@@ -28,9 +28,6 @@ class StackGCNs(Module):
 
         self.num_gcn_layers = num_layers - 1
 
-        self.a = nn.Parameter(torch.zeros(adj_dim, adj_dim)).to(default_device())
-        nn.init.xavier_normal_(self.a.data, gain = 0.5)
-
     def plainGCN(self, inputs):
         x_tangent, adj = inputs
         output = [x_tangent]
@@ -42,16 +39,8 @@ class StackGCNs(Module):
     def resSumGCN(self, inputs):
         x_tangent, adj = inputs
         output = [x_tangent]
-        # a = 1 * 41342
         for i in range(self.num_gcn_layers):
-            temp = torch.spmm(adj, output[i]).to(default_device())
-            temp = self.a.mm(temp)
-            temp = temp.squeeze()
-            temp = torch.sigmoid(temp)
-            temp = temp / 5 - 0.1
-            output.append(temp)
-            # output.append((torch.sigmoid(a.mm(torch.spmm(adj, output[i])).squeeze())) / 5 - 0.1)
-        # output = 41342 * 50
+            output.append(torch.spmm(adj, output[i]))
         return sum(output[1:])
 
     def resAddGCN(self, inputs):
