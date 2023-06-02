@@ -7,8 +7,8 @@ import numpy as np
 
 from config import parser
 from eval_metrics import recall_at_k_gpu
-from models.base_models import HGCFModel
-# from models.base_models import HGATModel
+# from models.base_models import HGCFModel
+from models.base_models import HSimpleGATModel
 from rgd.rsgd import RiemannianSGD
 from utils import get_tensorboard, early_stop
 from utils.data_generator import Data
@@ -40,12 +40,6 @@ def train(model):
     step_count = 0
     best_score = [[np.NINF, np.NINF, np.NINF, np.NINF],
                 [np.NINF, np.NINF, np.NINF, np.NINF]]
-
-    # add
-    # 考虑是否需要修改
-    # data.adj_train = sparse_mx_to_torch_sparse_tensor(data.adj_train + sp.eye(data.adj_train.shape[0]))
-    # data.adj_train = sparse_mx_to_torch_sparse_tensor(data.adj_train)
-    # end add
 
     for epoch in range(1, args.epochs + 1):
         avg_loss = 0.
@@ -171,14 +165,14 @@ if __name__ == '__main__':
     data = Data(args.dataset, args.norm_adj, args.seed, args.test_ratio)
     total_edges = data.adj_train.count_nonzero()
     args.n_nodes = data.num_users + data.num_items
-    args.feat_dim = data.adj_train_norm.shape[1]
+    args.feat_dim = args.embedding_dim
 # ----------------------------------------------------------------
 # sampler init
     sampler = WarpSampler((data.num_users, data.num_items),data.adj_train, args.batch_size, args.num_neg)
 # ----------------------------------------------------------------
 # model init
-    model = HGCFModel((data.num_users, data.num_items), args)
-    # model = HGATModel((data.num_users, data.num_items), args)
+    # model = HGCFModel((data.num_users, data.num_items), args)
+    model = HSimpleGATModel((data.num_users, data.num_items), args)
     model = model.to(default_device())
     print(str(model))
     print(set_color('\nModel is running on: ', 'green') +

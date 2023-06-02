@@ -25,11 +25,11 @@ config_args = {
         # end add
     },
     'Model Config:': {
-        'embedding_dim': (50, 'user item embedding dimension'),
+        'embedding_dim': (64, 'user item embedding dimension'),
         # 什么scale？
-        'scale': (0.1, 'scale for init'),
+        'scale': (1, 'scale for init'),
         # 为什么有embedding_dim，还有一个dim？
-        'dim': (50, 'embedding dimension'),
+        'dim': (64, 'embedding dimension'),
         'network': ('resSumGCN', 'choice of StackGCNs, plainGCN, denseGCN, resSumGCN, resAddGCN'),
         'c': (1, 'hyperbolic radius, set to None for trainable curvature'),
         # 编码器中的隐藏层数量

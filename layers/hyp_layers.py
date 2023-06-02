@@ -31,7 +31,6 @@ class StackGCNs(Module):
     def plainGCN(self, inputs):
         x_tangent, adj = inputs
         output = [x_tangent]
-        # a = nn.Parameter(torch.zeros(size=(1, 2 * )))
         for i in range(self.num_gcn_layers):
             output.append(torch.spmm(adj, output[i]))
         return output[-1]
