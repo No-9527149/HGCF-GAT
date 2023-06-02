@@ -33,7 +33,7 @@ config_args = {
         'network': ('resSumGCN', 'choice of StackGCNs, plainGCN, denseGCN, resSumGCN, resAddGCN'),
         'c': (1, 'hyperbolic radius, set to None for trainable curvature'),
         # 编码器中的隐藏层数量
-        'num-layers': (4,  'number of hidden layers in encoder'),
+        'num-layers': (2,  'number of hidden layers in encoder'),
         # 度量学习损失中的保证金值？
         'margin': (0.1, 'margin value in the metric learning loss'),
         # add

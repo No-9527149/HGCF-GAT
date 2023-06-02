@@ -7,7 +7,8 @@ import numpy as np
 
 from config import parser
 from eval_metrics import recall_at_k_gpu
-# from models.base_models import HGCFModel
+from models.base_models import HGCFModel
+from models.base_models import HSpGATModel
 from models.base_models import HSimpleGATModel
 from rgd.rsgd import RiemannianSGD
 from utils import get_tensorboard, early_stop
@@ -172,7 +173,8 @@ if __name__ == '__main__':
 # ----------------------------------------------------------------
 # model init
     # model = HGCFModel((data.num_users, data.num_items), args)
-    model = HSimpleGATModel((data.num_users, data.num_items), args)
+    model = HSpGATModel((data.num_users, data.num_items), args)
+    # model = HSimpleGATModel((data.num_users, data.num_items), args)
     model = model.to(default_device())
     print(str(model))
     print(set_color('\nModel is running on: ', 'green') +

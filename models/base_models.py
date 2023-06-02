@@ -91,21 +91,25 @@ class HSpGATModel(nn.Module):
         self.manifold = getattr(manifolds, "Hyperboloid")()
         self.nnodes = args.n_nodes
         # add
-        args.feat_dim = args.feat_dim + 1
+        # args.feat_dim = args.feat_dim + 1
         # end add
         self.encoder = getattr(encoders, "SpGAT")(self.c, args)
-
         self.num_users, self.num_items = users_items
         self.margin = args.margin
         self.weight_decay = args.weight_decay
         self.num_layers = args.num_layers
-
         self.args = args
+        self.embedding = nn.Embedding(num_embeddings=self.num_users + self.num_items,
+                                        embedding_dim=args.embedding_dim).to(default_device())
+        self.embedding.state_dict()['weight'].uniform_(-args.scale, args.scale)
+        self.embedding.weight = nn.Parameter(self.manifold.expmap0(self.embedding.state_dict()['weight'], self.c))
+        self.embedding.weight = manifolds.ManifoldParameter(self.embedding.weight, True, self.manifold, self.c)
 
     def encode(self, adj):
-        o = torch.zeros((x.shape[0], 1)).to(default_device())
-        x = x.to_dense().to(default_device())
-        x = torch.cat((o, x), dim=1)
+        x = self.embedding.weight
+        # o = torch.zeros((x.shape[0], 1)).to(default_device())
+        # x = x.to_dense().to(default_device())
+        # x = torch.cat((o, x), dim=1)
         if torch.cuda.is_available():
             adj = adj.to(default_device())
             x = x.to(default_device())

@@ -73,9 +73,9 @@ class SpGAT(Encoder):
 
     def encode(self, x, adj):
         x_hyp = self.manifold.proj(x, c=self.c)
-        o = torch.zeros((x_hyp.shape[0], 1)).to(default_device())
-        x_hyp = x_hyp.to_dense().to(default_device())
-        x_hyp = torch.cat((o, x_hyp), dim=1)
+        # o = torch.zeros((x_hyp.shape[0], 1)).to(default_device())
+        # x_hyp = x_hyp.to_dense().to(default_device())
+        # x_hyp = torch.cat((o, x_hyp), dim=1)
         return super(SpGAT, self).encode(x_hyp, adj)
 
 
