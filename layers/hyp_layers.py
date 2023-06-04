@@ -10,9 +10,9 @@ class HyperbolicGraphConvolution(nn.Module):
     Hyperbolic graph convolution layer.
     """
 
-    def __init__(self, manifold, in_features, out_features, c_in, network, num_layers, adj_dim):
+    def __init__(self, manifold, in_features, out_features, c_in, network, num_layers):
         super(HyperbolicGraphConvolution, self).__init__()
-        self.agg = HypAgg(manifold, c_in, out_features, network, num_layers, adj_dim)
+        self.agg = HypAgg(manifold, c_in, out_features, network, num_layers)
 
     def forward(self, input):
         x, adj = input
@@ -23,7 +23,7 @@ class HyperbolicGraphConvolution(nn.Module):
 
 class StackGCNs(Module):
 
-    def __init__(self, num_layers, adj_dim):
+    def __init__(self, num_layers):
         super(StackGCNs, self).__init__()
 
         self.num_gcn_layers = num_layers - 1
@@ -70,13 +70,12 @@ class HypAgg(Module):
     Hyperbolic aggregation layer.
     """
 
-    def __init__(self, manifold, c, in_features, network, num_layers, adj_dim):
+    def __init__(self, manifold, c, in_features, network, num_layers):
         super(HypAgg, self).__init__()
         self.manifold = manifold
         self.c = c
         self.in_features = in_features
-        self.adj_dim = adj_dim
-        self.stackGCNs = getattr(StackGCNs(num_layers, self.adj_dim), network)
+        self.stackGCNs = getattr(StackGCNs(num_layers), network)
 
     def forward(self, x, adj):
         # 投影到切线空间

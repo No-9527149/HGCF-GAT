@@ -12,30 +12,19 @@ class HGCFModel(nn.Module):
 
     def __init__(self, users_items, args):
         super(HGCFModel, self).__init__()
-
         self.c = torch.tensor([args.c]).to(default_device())
         self.manifold = getattr(manifolds, "Hyperboloid")()
         self.nnodes = args.n_nodes
         self.num_users, self.num_items = users_items
-        # add
-        self.adj_dim = self.num_users + self.num_items
-        # end add
-        # 考虑是否需要更换encoders
-        # add self.adj_dim
-        self.encoder = getattr(encoders, "HGCF")(self.c, args, self.adj_dim)
-
+        self.encoder = getattr(encoders, "HGCF")(self.c, args)
         self.margin = args.margin
         self.weight_decay = args.weight_decay
         self.num_layers = args.num_layers
         self.args = args
-        
-
         self.embedding = nn.Embedding(num_embeddings=self.num_users + self.num_items,
                                         embedding_dim=args.embedding_dim).to(default_device())
-
         self.embedding.state_dict()['weight'].uniform_(-args.scale, args.scale)
         self.embedding.weight = nn.Parameter(self.manifold.expmap0(self.embedding.state_dict()['weight'], self.c))
-
         self.embedding.weight = manifolds.ManifoldParameter(self.embedding.weight, True, self.manifold, self.c)
 
     def encode(self, adj):

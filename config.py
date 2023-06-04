@@ -27,7 +27,7 @@ config_args = {
     'Model Config:': {
         'embedding_dim': (64, 'user item embedding dimension'),
         # 什么scale？
-        'scale': (1, 'scale for init'),
+        'scale': (0.1, 'scale for init'),
         # 为什么有embedding_dim，还有一个dim？
         'dim': (64, 'embedding dimension'),
         'network': ('resSumGCN', 'choice of StackGCNs, plainGCN, denseGCN, resSumGCN, resAddGCN'),

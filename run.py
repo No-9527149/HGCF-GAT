@@ -23,21 +23,21 @@ import scipy.sparse as sp
 
 
 def train(model):
-    print(set_color("\nTraining: ", 'green'))
+# ----------------------------------------------------------------
+# params and tb init
     optimizer = RiemannianSGD(params=model.parameters(), lr=args.lr,
                             weight_decay=args.weight_decay, momentum=args.momentum)
-
     tot_params = sum([np.prod(p.size()) for p in model.parameters()])
-    print(set_color("Total number of parameters", 'yellow') +
-        set_color(' = ', 'white'), set_color(str(tot_params), 'blue'))
-
     num_pairs = data.adj_train.count_nonzero() // 2
     num_batches = int(num_pairs / args.batch_size) + 1
+    tb_writer = get_tensorboard()
+    print(set_color("\nTraining: ", 'green'))
+    print(set_color("Total number of parameters", 'yellow') +
+        set_color(' = ', 'white'), set_color(str(tot_params), 'blue'))
     print(set_color("Number of Batches", 'yellow') + set_color(' = ',
         'white'), set_color(str(num_batches), 'blue') + '\n')
-
-    tb_writer = get_tensorboard()
-
+# ----------------------------------------------------------------
+# Begin training
     step_count = 0
     best_score = [[np.NINF, np.NINF, np.NINF, np.NINF],
                 [np.NINF, np.NINF, np.NINF, np.NINF]]
@@ -46,6 +46,7 @@ def train(model):
         avg_loss = 0.
         t = time.time()
         for batch in range(num_batches):
+            print("Batch: {}".format(batch))
             triples = sampler.next_batch()
             model.train()
             optimizer.zero_grad()
@@ -54,10 +55,9 @@ def train(model):
             train_loss.backward()
             optimizer.step()
             avg_loss += train_loss / num_batches
-            # print("Batch: {}".format(batch))
-
         tb_writer.add_scalar("Loss/Train", avg_loss, epoch)
-
+# ----------------------------------------------------------------
+# Logging
         if args.log:
             log.write('Train:{:3d}\t{:.2f}\n'.format(epoch, avg_loss))
         else:
@@ -67,9 +67,9 @@ def train(model):
                 set_color('{:.3f}'.format(avg_loss), 'blue') + '\t' +
                 set_color('Time:', 'pink') + '\t' +
                 set_color('{}s'.format(time.time() - t), 'blue'))
-
+# ----------------------------------------------------------------
+# Eval
         stop_flag = 0
-
         if (epoch + 1) % args.eval_freq == 0:
             model.eval()
             start = time.time()
@@ -78,21 +78,21 @@ def train(model):
             print("Encode:\t{}s\t".format(time.time() - start) +
                 "Pred:\t{}s".format(time.time() - start))
             results = eval_rec(pred_matrix_gpu, data)
-
+# ----------------------------------------------------------------
+# Logging
             if args.log:
                 log.write('Test:{:3d}\t{:.3f}\t{:.4f}\t{:.3f}\t{:.4f}\n'.format(epoch + 1, results[0][1], results[0][2],
                                                                                 results[-1][1], results[-1][2]))
             else:
-
                 print(set_color("R_GPU@:", 'green') + '\t' +
                     '\t'.join([str(round(x, 4)) for x in results[0]]))
                 print(set_color("N_GPU@:", 'green') + '\t' +
                     '\t'.join([str(round(x, 4)) for x in results[-1]]))
-
             tb_writer.add_scalar('Valid_score', results[0][1], epoch)
             best_score, step_count, stop_flag = early_stop(
                 results, best_score, step_count)
-
+# ----------------------------------------------------------------
+# Early stopping
         if stop_flag:
             print(set_color("Best Result:", 'pink'))
             print("R_GPU@:\t" + '\t'.join([str(round(x, 4))
@@ -100,7 +100,6 @@ def train(model):
             print("N_GPU@:\t" + '\t'.join([str(round(x, 4))
                                         for x in best_score[-1]]))
             break
-
     sampler.close()
 
 

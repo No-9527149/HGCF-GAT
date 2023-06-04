@@ -33,22 +33,22 @@ class SpecialSpmm(nn.Module):
     def forward(self, indices, values, shape, b):
         return SpecialSpmmFunction.apply(indices, values, shape, b)
 
-class SpGraphAttentionLayer(nn.Module):
+class SpSingleGraphAttentionLayer(nn.Module):
     """
     Sparse version GAT layer, similar to https://arxiv.org/abs/1710.10903
     """
 
     def __init__(self, in_features, out_features, dropout, alpha, activation):
-        super(SpGraphAttentionLayer, self).__init__()
+        super(SpSingleGraphAttentionLayer, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
         self.alpha = alpha
 
         self.W = nn.Parameter(torch.zeros(size=(in_features, out_features)))
-        nn.init.xavier_normal_(self.W.data, gain=1)
+        nn.init.xavier_normal_(self.W.data, gain=1.414)
 
         self.a = nn.Parameter(torch.zeros(size=(1, 2 * out_features)))
-        nn.init.xavier_normal_(self.a.data, gain=1)
+        nn.init.xavier_normal_(self.a.data, gain=1.414)
 
         self.dropout = nn.Dropout(dropout)
         self.leakyrelu = nn.LeakyReLU(self.alpha)
@@ -69,9 +69,6 @@ class SpGraphAttentionLayer(nn.Module):
 
         edge_e = torch.exp(-self.leakyrelu(self.a.mm(edge_h).squeeze()))
         # edge_e = (torch.sigmoid(self.a.mm(edge_h).squeeze()) - 0.5) / 2 + 1
-        
-        del edge_h
-
         assert not torch.isnan(edge_e).any()
         # edge_e: E
 
@@ -79,15 +76,14 @@ class SpGraphAttentionLayer(nn.Module):
         if h.is_cuda:
             ones = ones.cuda()
         e_rowsum = self.special_spmm(edge, edge_e, torch.Size([N, N]), ones)
-
         # e_rowsum: N x 1
 
         edge_e = self.dropout(edge_e)
         # edge_e: E
 
         h_prime = self.special_spmm(edge, edge_e, torch.Size([N, N]), h)
-
         assert not torch.isnan(h_prime).any()
+        # h_prime: N x out
         
         h_prime = h_prime.div(e_rowsum)
         # h_prime: N x out
@@ -98,19 +94,15 @@ class SpGraphAttentionLayer(nn.Module):
     def __repr__(self):
         return self.__class__.__name__ + ' (' + str(self.in_features) + ' -> ' + str(self.out_features) + ')'
 
-class GraphAttentionLayer(nn.Module):
-    # add c
+class SpGraphAttentionLayer(nn.Module):
     def __init__(self, input_dim, output_dim, dropout, activation, alpha, nheads, concat, c):
-    # end add c
         """Sparse version of GAT."""
-        super(GraphAttentionLayer, self).__init__()
+        super(SpGraphAttentionLayer, self).__init__()
         self.dropout = dropout
         self.output_dim = output_dim
-        # add
         self.c = c
         self.manifold = getattr(manifolds, "Hyperboloid")()
-        # end add
-        self.attentions = [SpGraphAttentionLayer(input_dim,
+        self.attentions = [SpSingleGraphAttentionLayer(input_dim,
                                                 output_dim,
                                                 dropout=dropout,
                                                 alpha=alpha,
